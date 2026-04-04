@@ -14,10 +14,16 @@ public class GameSetup : MonoBehaviour
 
     void BuildGame()
     {
-        // Camera
+        // Camera — force solid black background (no skybox)
+        Camera.main.clearFlags = CameraClearFlags.SolidColor;
         Camera.main.backgroundColor = Color.black;
         Camera.main.orthographic = true;
         Camera.main.orthographicSize = 6f;
+
+        // Remove the default directional light if present
+        var light = FindAnyObjectByType<Light>();
+        if (light != null)
+            Destroy(light.gameObject);
 
         // Materials
         Material greenMat = new Material(Shader.Find("Sprites/Default"));
@@ -94,16 +100,35 @@ public class GameSetup : MonoBehaviour
         GameObject canvas = new GameObject("Canvas");
         var c = canvas.AddComponent<Canvas>();
         c.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.AddComponent<UnityEngine.UI.CanvasScaler>();
+        var scaler = canvas.AddComponent<UnityEngine.UI.CanvasScaler>();
+        scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1280f, 720f);
+        scaler.matchWidthOrHeight = 0.5f;
+        canvas.AddComponent<UnityEngine.UI.GraphicRaycaster>();
 
-        TextMeshProUGUI leftScoreText = CreateScoreText(canvas.transform, "LeftScore", new Vector2(-200f, 250f));
-        TextMeshProUGUI rightScoreText = CreateScoreText(canvas.transform, "RightScore", new Vector2(200f, 250f));
+        TextMeshProUGUI leftScoreText = CreateScoreText(canvas.transform, "LeftScore", new Vector2(-200f, 300f));
+        TextMeshProUGUI rightScoreText = CreateScoreText(canvas.transform, "RightScore", new Vector2(200f, 300f));
+
+        // Win/game-over message (hidden by default)
+        GameObject winObj = new GameObject("WinText");
+        winObj.transform.SetParent(canvas.transform, false);
+        var winRt = winObj.AddComponent<RectTransform>();
+        winRt.anchoredPosition = Vector2.zero;
+        winRt.sizeDelta = new Vector2(800f, 200f);
+        var winTmp = winObj.AddComponent<TextMeshProUGUI>();
+        winTmp.text = "";
+        winTmp.fontSize = 60;
+        winTmp.color = new Color(0f, 1f, 0.2f);
+        winTmp.alignment = TextAlignmentOptions.Center;
+        winTmp.fontStyle = FontStyles.Bold;
+        winObj.SetActive(false);
 
         // --- Game Manager ---
         GameObject gm = new GameObject("GameManager");
         var manager = gm.AddComponent<GameManager>();
         manager.leftScoreText = leftScoreText;
         manager.rightScoreText = rightScoreText;
+        manager.winText = winTmp;
         manager.ball = ballCtrl;
     }
 
