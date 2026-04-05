@@ -45,7 +45,7 @@ public class GameManager : MonoBehaviour
         }
         else if (rightScore >= winningScore)
         {
-            EndGame("AI WINS!");
+            EndGame("AI WINS!\nPlease welcome our new Computer Overlords!");
         }
         else
         {

@@ -180,7 +180,7 @@ public class GameSetup : MonoBehaviour
         GameObject playAgainObj = new GameObject("PlayAgainBtn");
         playAgainObj.transform.SetParent(winObj.transform, false);
         var paBtnRt = playAgainObj.AddComponent<RectTransform>();
-        paBtnRt.anchoredPosition = new Vector2(0f, -60f);
+        paBtnRt.anchoredPosition = new Vector2(0f, -120f);
         paBtnRt.sizeDelta = new Vector2(250f, 60f);
         var paBtnImg = playAgainObj.AddComponent<Image>();
         paBtnImg.sprite = CreateOpaqueSprite();
