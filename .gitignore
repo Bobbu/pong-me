@@ -3,7 +3,7 @@
 [Tt]emp/
 [Oo]bj/
 [Bb]uilds/
-[Bb]uild/
+[Bb]uild/*
 !Build/Mac/
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
