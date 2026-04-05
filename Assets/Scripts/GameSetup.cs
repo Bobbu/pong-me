@@ -148,18 +148,58 @@ public class GameSetup : MonoBehaviour
         TextMeshProUGUI leftScoreText = CreateScoreText(safeArea.transform, "LeftScore", -200f);
         TextMeshProUGUI rightScoreText = CreateScoreText(safeArea.transform, "RightScore", 200f);
 
-        // --- Win text (center, hidden) ---
-        GameObject winObj = new GameObject("WinText");
+        // --- Win overlay (center, hidden) ---
+        GameObject winObj = new GameObject("WinOverlay");
         winObj.transform.SetParent(safeArea.transform, false);
         var winRt = winObj.AddComponent<RectTransform>();
-        winRt.anchoredPosition = Vector2.zero;
-        winRt.sizeDelta = new Vector2(800f, 200f);
-        var winTmp = winObj.AddComponent<TextMeshProUGUI>();
+        winRt.anchorMin = Vector2.zero;
+        winRt.anchorMax = Vector2.one;
+        winRt.offsetMin = Vector2.zero;
+        winRt.offsetMax = Vector2.zero;
+
+        // Win message text
+        GameObject winTextObj = new GameObject("WinText");
+        winTextObj.transform.SetParent(winObj.transform, false);
+        var winTextRt = winTextObj.AddComponent<RectTransform>();
+        winTextRt.anchoredPosition = new Vector2(0f, 40f);
+        winTextRt.sizeDelta = new Vector2(800f, 150f);
+        var winTmp = winTextObj.AddComponent<TextMeshProUGUI>();
         winTmp.text = "";
         winTmp.fontSize = 60;
         winTmp.color = new Color(0f, 1f, 0.2f);
         winTmp.alignment = TextAlignmentOptions.Center;
         winTmp.fontStyle = FontStyles.Bold;
+
+        // Play Again button
+        GameObject playAgainObj = new GameObject("PlayAgainBtn");
+        playAgainObj.transform.SetParent(winObj.transform, false);
+        var paBtnRt = playAgainObj.AddComponent<RectTransform>();
+        paBtnRt.anchoredPosition = new Vector2(0f, -60f);
+        paBtnRt.sizeDelta = new Vector2(250f, 60f);
+        var paBtnImg = playAgainObj.AddComponent<Image>();
+        paBtnImg.sprite = CreateOpaqueSprite();
+        paBtnImg.color = new Color(0f, 0.25f, 0.05f, 1f);
+        var paBtn = playAgainObj.AddComponent<Button>();
+        var paColors = paBtn.colors;
+        paColors.highlightedColor = new Color(0f, 0.5f, 0.12f);
+        paColors.pressedColor = new Color(0f, 1f, 0.2f);
+        paBtn.colors = paColors;
+
+        GameObject paTxtObj = new GameObject("Label");
+        paTxtObj.transform.SetParent(playAgainObj.transform, false);
+        var paTxtRt = paTxtObj.AddComponent<RectTransform>();
+        paTxtRt.anchorMin = Vector2.zero;
+        paTxtRt.anchorMax = Vector2.one;
+        paTxtRt.offsetMin = Vector2.zero;
+        paTxtRt.offsetMax = Vector2.zero;
+        var paTxt = paTxtObj.AddComponent<TextMeshProUGUI>();
+        paTxt.text = "PLAY AGAIN";
+        paTxt.fontSize = 28;
+        paTxt.color = new Color(0f, 1f, 0.2f);
+        paTxt.alignment = TextAlignmentOptions.Center;
+        paTxt.fontStyle = FontStyles.Bold;
+        paTxt.raycastTarget = false;
+
         winObj.SetActive(false);
 
         // --- Settings icon (top-left) ---
@@ -203,7 +243,11 @@ public class GameSetup : MonoBehaviour
         manager.leftScoreText = leftScoreText;
         manager.rightScoreText = rightScoreText;
         manager.winText = winTmp;
+        manager.winOverlay = winObj;
         manager.ball = ballCtrl;
+
+        // Wire Play Again button to reset
+        paBtn.onClick.AddListener(() => manager.ResetGame());
     }
 
     // =============================================

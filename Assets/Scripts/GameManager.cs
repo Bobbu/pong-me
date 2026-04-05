@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI leftScoreText;
     public TextMeshProUGUI rightScoreText;
     public TextMeshProUGUI winText;
+    public GameObject winOverlay;
     public BallController ball;
     public int winningScore = 3;
 
@@ -56,13 +57,23 @@ public class GameManager : MonoBehaviour
         gameOver = true;
         if (SoundManager.Instance != null) SoundManager.Instance.PlayWin();
         if (winText != null)
-        {
-            winText.text = message + "\nPRESS R TO PLAY AGAIN";
-            winText.gameObject.SetActive(true);
-        }
+            winText.text = message;
+        if (winOverlay != null)
+            winOverlay.SetActive(true);
         ball.ResetBall();
         ball.CancelInvoke();
         ball.GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;
+    }
+
+    public void ResetGame()
+    {
+        leftScore = 0;
+        rightScore = 0;
+        gameOver = false;
+        UpdateScoreUI();
+        if (winOverlay != null)
+            winOverlay.SetActive(false);
+        ball.ResetBall();
     }
 
     void UpdateScoreUI()
@@ -75,16 +86,9 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
+        // Keyboard reset (still works on Mac)
         if (Input.GetKeyDown(KeyCode.R))
-        {
-            leftScore = 0;
-            rightScore = 0;
-            gameOver = false;
-            UpdateScoreUI();
-            if (winText != null)
-                winText.gameObject.SetActive(false);
-            ball.ResetBall();
-        }
+            ResetGame();
 
         // Keyboard speed shortcuts (also available via Settings panel)
         if (Input.GetKeyDown(KeyCode.Alpha1)) SetSpeed(5f, 0.3f, 12f);
