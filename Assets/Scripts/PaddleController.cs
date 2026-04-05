@@ -12,6 +12,10 @@ public class PaddleController : MonoBehaviour
     // AI settings
     public Transform ball;
     public float aiReactionSpeed = 6f;
+    public float aiErrorRange = 0.5f;    // random offset from ball position
+    public float aiReactionDelay = 0.1f; // seconds before AI reacts to direction change
+    private float aiTargetY;
+    private float aiUpdateTimer;
 
     // Touch settings
     public float touchSmoothSpeed = 15f;
@@ -89,10 +93,24 @@ public class PaddleController : MonoBehaviour
     {
         if (ball == null) return;
 
-        float targetY = ball.position.y;
+        // Update target periodically based on reaction delay
+        aiUpdateTimer -= Time.deltaTime;
+        if (aiUpdateTimer <= 0f)
+        {
+            aiUpdateTimer = aiReactionDelay;
+            aiTargetY = ball.position.y + Random.Range(-aiErrorRange, aiErrorRange);
+        }
+
         float currentY = transform.position.y;
-        float move = Mathf.MoveTowards(currentY, targetY, aiReactionSpeed * Time.deltaTime);
+        float move = Mathf.MoveTowards(currentY, aiTargetY, aiReactionSpeed * Time.deltaTime);
         transform.position = new Vector3(transform.position.x, move, 0f);
+    }
+
+    public void SetDifficulty(float reactionSpeed, float errorRange, float reactionDelay)
+    {
+        aiReactionSpeed = reactionSpeed;
+        aiErrorRange = errorRange;
+        aiReactionDelay = reactionDelay;
     }
 
     void ClampPosition()

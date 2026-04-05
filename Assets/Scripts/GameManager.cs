@@ -15,6 +15,8 @@ public class GameManager : MonoBehaviour
     private int leftScore;
     private int rightScore;
     private bool gameOver;
+    private bool paused;
+    private Vector2 savedBallVelocity;
 
     void Awake()
     {
@@ -28,7 +30,7 @@ public class GameManager : MonoBehaviour
 
     public void ScorePoint(bool leftSideGoal)
     {
-        if (gameOver) return;
+        if (gameOver || paused) return;
 
         if (leftSideGoal)
             rightScore++;
@@ -70,11 +72,36 @@ public class GameManager : MonoBehaviour
         leftScore = 0;
         rightScore = 0;
         gameOver = false;
+        paused = false;
+        Time.timeScale = 1f;
         UpdateScoreUI();
         if (winOverlay != null)
             winOverlay.SetActive(false);
         ball.ResetBall();
     }
+
+    public void SetPaused(bool pause)
+    {
+        if (gameOver) return;
+        paused = pause;
+
+        var rb = ball.GetComponent<Rigidbody2D>();
+        if (pause)
+        {
+            savedBallVelocity = rb.linearVelocity;
+            rb.linearVelocity = Vector2.zero;
+        }
+        else
+        {
+            // If ball had velocity, restore it; otherwise it's waiting to launch
+            if (savedBallVelocity.sqrMagnitude > 0.01f)
+                rb.linearVelocity = savedBallVelocity;
+            else
+                ball.LaunchBall();
+        }
+    }
+
+    public bool IsPaused() => paused;
 
     void UpdateScoreUI()
     {
@@ -86,6 +113,14 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
+        // Cmd+Q / Ctrl+Q to quit (Mac/Windows)
+        if ((Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand) ||
+             Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
+            && Input.GetKeyDown(KeyCode.Q))
+        {
+            Application.Quit();
+        }
+
         // Keyboard reset (still works on Mac)
         if (Input.GetKeyDown(KeyCode.R))
             ResetGame();

@@ -15,6 +15,12 @@ public class GameSetup : MonoBehaviour
 
     void BuildGame()
     {
+#if !UNITY_IOS
+        // Force windowed mode on desktop builds
+        Screen.fullScreenMode = FullScreenMode.Windowed;
+        Screen.SetResolution(1920, 1080, false);
+#endif
+
         // Camera — force solid black background (no skybox)
         Camera.main.clearFlags = CameraClearFlags.SolidColor;
         Camera.main.backgroundColor = Color.black;
@@ -205,15 +211,20 @@ public class GameSetup : MonoBehaviour
         // --- Settings icon (top-left) ---
         GameObject settingsBtn = CreateIconButton(safeArea.transform, "SettingsBtn",
             new Vector2(35f, -35f), TextAnchor.UpperLeft, "*", true);
-        GameObject settingsPanel = CreateSettingsPanel(safeArea.transform, ballCtrl);
+        GameObject settingsPanel = CreateSettingsPanel(safeArea.transform, ballCtrl, rpCtrl);
         settingsPanel.SetActive(false);
         settingsBtn.GetComponent<Button>().onClick.AddListener(() =>
         {
-            settingsPanel.SetActive(!settingsPanel.activeSelf);
+            bool opening = !settingsPanel.activeSelf;
+            settingsPanel.SetActive(opening);
             // Close help if open
             var hp = safeArea.transform.Find("HelpPanel");
             if (hp != null && hp.gameObject.activeSelf)
                 hp.gameObject.SetActive(false);
+            // Pause/unpause
+            bool anyOpen = opening; // settings just opened
+            if (GameManager.Instance != null)
+                GameManager.Instance.SetPaused(anyOpen);
         });
 
         // --- Help icon (top-right) ---
@@ -223,10 +234,15 @@ public class GameSetup : MonoBehaviour
         helpPanel.SetActive(false);
         helpBtn.GetComponent<Button>().onClick.AddListener(() =>
         {
-            helpPanel.SetActive(!helpPanel.activeSelf);
+            bool opening = !helpPanel.activeSelf;
+            helpPanel.SetActive(opening);
             // Close settings if open
             if (settingsPanel.activeSelf)
                 settingsPanel.SetActive(false);
+            // Pause/unpause
+            bool anyOpen = opening;
+            if (GameManager.Instance != null)
+                GameManager.Instance.SetPaused(anyOpen);
         });
 
         // --- Sound Manager ---
@@ -253,60 +269,110 @@ public class GameSetup : MonoBehaviour
     // =============================================
     // Settings Panel
     // =============================================
-    GameObject CreateSettingsPanel(Transform parent, BallController ball)
+    GameObject CreateSettingsPanel(Transform parent, BallController ball, PaddleController aiPaddle)
     {
-        GameObject panel = CreatePanel(parent, "SettingsPanel", new Vector2(220f, 330f),
+        GameObject panel = CreatePanel(parent, "SettingsPanel", new Vector2(220f, 490f),
             new Vector2(140f, -90f), TextAnchor.UpperLeft);
         panel.AddComponent<RectMask2D>();
 
-        // Title                                    Y from top:
+        float y = -10f;
+
+        // Title
         CreatePanelText(panel.transform, "SettingsTitle", "SETTINGS",
-            new Vector2(0f, -10f), 22, FontStyles.Bold, TextAlignmentOptions.Center, 30f);   // -10
+            new Vector2(0f, y), 22, FontStyles.Bold, TextAlignmentOptions.Center, 30f);
+        y -= 40f;
 
         // Speed label
         var speedLabel = CreatePanelText(panel.transform, "SpeedLabel", "Speed: MEDIUM",
-            new Vector2(0f, -50f), 18, FontStyles.Normal, TextAlignmentOptions.Center, 25f);  // -50
+            new Vector2(0f, y), 18, FontStyles.Normal, TextAlignmentOptions.Center, 25f);
+        y -= 50f;
 
-        // Speed buttons (30px gap below label)
-        CreatePanelButton(panel.transform, "SlowBtn", "SLOW", new Vector2(-70f, -100f), () =>
+        // Speed buttons
+        CreatePanelButton(panel.transform, "SlowBtn", "SLOW", new Vector2(-70f, y), () =>
         {
             if (GameManager.Instance != null) GameManager.Instance.SetSpeed(5f, 0.3f, 12f);
             speedLabel.text = "Speed: SLOW";
         });
-        CreatePanelButton(panel.transform, "MedBtn", "MED", new Vector2(0f, -100f), () =>
+        CreatePanelButton(panel.transform, "MedBtn", "MED", new Vector2(0f, y), () =>
         {
             if (GameManager.Instance != null) GameManager.Instance.SetSpeed(8f, 0.5f, 20f);
             speedLabel.text = "Speed: MEDIUM";
         });
-        CreatePanelButton(panel.transform, "FastBtn", "FAST", new Vector2(70f, -100f), () =>
+        CreatePanelButton(panel.transform, "FastBtn", "FAST", new Vector2(70f, y), () =>
         {
             if (GameManager.Instance != null) GameManager.Instance.SetSpeed(12f, 0.8f, 28f);
             speedLabel.text = "Speed: FAST";
         });
+        y -= 40f;
 
-        // Sound label (gap after speed buttons)
+        // AI difficulty label
+        var aiLabel = CreatePanelText(panel.transform, "AILabel", "AI: MEDIUM",
+            new Vector2(0f, y), 18, FontStyles.Normal, TextAlignmentOptions.Center, 25f);
+        y -= 50f;
+
+        // AI difficulty buttons
+        //                                   reactionSpeed, errorRange, reactionDelay
+        CreatePanelButton(panel.transform, "AIEasyBtn", "EASY", new Vector2(-70f, y), () =>
+        {
+            aiPaddle.SetDifficulty(3.5f, 1.5f, 0.3f);
+            aiLabel.text = "AI: EASY";
+        });
+        CreatePanelButton(panel.transform, "AIMedBtn", "MED", new Vector2(0f, y), () =>
+        {
+            aiPaddle.SetDifficulty(6f, 0.5f, 0.1f);
+            aiLabel.text = "AI: MEDIUM";
+        });
+        CreatePanelButton(panel.transform, "AIHardBtn", "HARD", new Vector2(70f, y), () =>
+        {
+            aiPaddle.SetDifficulty(10f, 0.1f, 0.02f);
+            aiLabel.text = "AI: HARD";
+        });
+        y -= 40f;
+
+        // Sound label
         var soundLabel = CreatePanelText(panel.transform, "SoundLabel", "Sound: ON",
-            new Vector2(0f, -140f), 18, FontStyles.Normal, TextAlignmentOptions.Center, 25f); // -140
+            new Vector2(0f, y), 18, FontStyles.Normal, TextAlignmentOptions.Center, 25f);
+        y -= 50f;
 
-        // Sound buttons (30px gap below label)
-        CreatePanelButton(panel.transform, "SoundOnBtn", "ON", new Vector2(-35f, -190f), () =>
+        // Sound buttons
+        CreatePanelButton(panel.transform, "SoundOnBtn", "ON", new Vector2(-35f, y), () =>
         {
             if (SoundManager.Instance != null) SoundManager.Instance.SetMuted(false);
             soundLabel.text = "Sound: ON";
         });
-        CreatePanelButton(panel.transform, "SoundOffBtn", "OFF", new Vector2(35f, -190f), () =>
+        CreatePanelButton(panel.transform, "SoundOffBtn", "OFF", new Vector2(35f, y), () =>
         {
             if (SoundManager.Instance != null) SoundManager.Instance.SetMuted(true);
             soundLabel.text = "Sound: OFF";
         });
+        y -= 40f;
 
         // Win score label
-        CreatePanelText(panel.transform, "WinScoreInfo", "Win Score: 3",
-            new Vector2(0f, -230f), 16, FontStyles.Normal, TextAlignmentOptions.Center, 25f); // -230
+        var winScoreLabel = CreatePanelText(panel.transform, "WinScoreLabel", "Win Score: 3",
+            new Vector2(0f, y), 18, FontStyles.Normal, TextAlignmentOptions.Center, 25f);
+        y -= 50f;
+
+        // Win score buttons
+        CreatePanelButton(panel.transform, "Win3Btn", "3", new Vector2(-70f, y), () =>
+        {
+            if (GameManager.Instance != null) GameManager.Instance.winningScore = 3;
+            winScoreLabel.text = "Win Score: 3";
+        });
+        CreatePanelButton(panel.transform, "Win5Btn", "5", new Vector2(0f, y), () =>
+        {
+            if (GameManager.Instance != null) GameManager.Instance.winningScore = 5;
+            winScoreLabel.text = "Win Score: 5";
+        });
+        CreatePanelButton(panel.transform, "Win7Btn", "7", new Vector2(70f, y), () =>
+        {
+            if (GameManager.Instance != null) GameManager.Instance.winningScore = 7;
+            winScoreLabel.text = "Win Score: 7";
+        });
+        y -= 50f;
 
         // Close hint
-        CreatePanelText(panel.transform, "CloseHint", "click gear to close",
-            new Vector2(0f, -270f), 14, FontStyles.Italic, TextAlignmentOptions.Center, 25f); // -270
+        CreatePanelText(panel.transform, "CloseHint", "tap gear to close",
+            new Vector2(0f, y), 14, FontStyles.Italic, TextAlignmentOptions.Center, 25f);
 
         return panel;
     }
@@ -366,9 +432,10 @@ public class GameSetup : MonoBehaviour
             "  W / S  -  Move paddle up/down\n" +
             "  Touch  -  Drag left side of screen\n" +
             "  R  -  Reset / New game\n" +
-            "  M  -  Toggle sound\n\n" +
+            "  M  -  Toggle sound\n" +
+            "  Cmd+Q  -  Quit (Mac)\n\n" +
             "<b>OBJECTIVE</b>\n" +
-            "  First to 3 points wins.\n" +
+            "  First to target score wins.\n" +
             "  Don't let the ball pass\n" +
             "  your paddle!\n\n" +
             "<b>SPEED</b>\n" +
