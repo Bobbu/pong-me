@@ -56,23 +56,28 @@ jobs:
           IDENTITY: "Developer ID Application: Robert Daly (H9YFX25Z95)"
         run: |
           APP="Build/Mac/$APP_NAME.app"
+          ENTITLEMENTS="Build/Mac/$APP_NAME.entitlements"
 
           # Sign frameworks from the inside out
           find "$APP/Contents/Frameworks" -name "*.framework" -maxdepth 1 | while read framework; do
-            codesign --force --options runtime --sign "$IDENTITY" "$framework"
+            codesign --force --options runtime --sign "$IDENTITY" \
+              --entitlements "$ENTITLEMENTS" "$framework"
           done
 
           find "$APP/Contents/Frameworks" -name "*.bundle" -maxdepth 1 | while read bundle; do
-            codesign --force --options runtime --sign "$IDENTITY" "$bundle"
+            codesign --force --options runtime --sign "$IDENTITY" \
+              --entitlements "$ENTITLEMENTS" "$bundle"
           done
 
           # Sign any dylibs
           find "$APP" -name "*.dylib" | while read dylib; do
-            codesign --force --options runtime --sign "$IDENTITY" "$dylib"
+            codesign --force --options runtime --sign "$IDENTITY" \
+              --entitlements "$ENTITLEMENTS" "$dylib"
           done
 
           # Sign the main app bundle
-          codesign --force --options runtime --sign "$IDENTITY" "$APP"
+          codesign --force --options runtime --sign "$IDENTITY" \
+            --entitlements "$ENTITLEMENTS" "$APP"
 
       - name: Verify codesign
         run: |
