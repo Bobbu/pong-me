@@ -20,7 +20,7 @@ A retro-styled Pong game built in Unity 6, with bold green-on-black visuals insp
 - macOS, Windows, or Linux
 
 ### Open & Play
-1. Open Unity Hub → **Add** → select the `Unity_Play` folder
+1. Open Unity Hub → **Add** → select the `Pong_Me` folder
 2. When prompted, import **TMP Essentials** (Window → TextMeshPro → Import TMP Essential Resources)
 3. Open the scene at `Assets/Scenes/Pong.unity`
 4. Press **Play**
@@ -77,7 +77,7 @@ All sprites are generated from a 4x4 white texture. The gear icon is a procedura
 ## Project Structure
 
 ```
-Unity_Play/
+Pong_Me/
 ├── Assets/
 │   ├── AppIcon.png              — App icon (retro CRT style)
 │   ├── Scenes/Pong.unity        — Main scene

@@ -55,5 +55,12 @@ ignore.conf
 *.private.0
 *.private
 
+# Unity Recovery
+Assets/_Recovery/
+
+# CDK
+website/cdk/cdk.out/
+website/cdk/node_modules/
+
 # Claude Code local settings
 .claude/

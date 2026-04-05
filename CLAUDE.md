@@ -8,7 +8,7 @@ Unity 2D Pong game ("Pong Me" by Any Stupid Idea / CatalystApps) — a fully pro
 
 ## Getting Started
 
-1. Open `Unity_Play/` folder in Unity Hub (requires Unity 6 / 6000.4.x)
+1. Open the `Pong_Me/` project folder in Unity Hub (requires Unity 6 / 6000.4.x)
 2. Import TMP Essentials if prompted
 3. Open `Assets/Scenes/Pong.unity`
 4. Press Play
