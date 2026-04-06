@@ -28,6 +28,9 @@ jobs:
             exit 1
           fi
 
+      - name: Stage README.txt into build folder
+        run: cp installer/windows-README.txt Build/Windows/README.txt
+
       - name: Create ZIP
         run: |
           cd Build

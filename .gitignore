@@ -6,6 +6,8 @@
 [Bb]uild/*
 !Build/Mac/
 !Build/Windows/
+# README.txt is generated from installer/windows-README.txt at zip time
+Build/Windows/README.txt
 [Ll]ogs/
 [Uu]ser[Ss]ettings/
 [Mm]emoryCaptures/

@@ -50,6 +50,7 @@ Requires the **Windows Build Support (Mono)** module installed via Unity Hub (In
   ```
 - Output: `Build/Windows/PongMe.exe` plus `PongMe_Data/`, `UnityPlayer.dll`, and other runtime files. **All files in `Build/Windows/` must be distributed together.**
 - Note: builds are unsigned, so Windows SmartScreen will warn users on first launch (More info → Run anyway).
+- The user-facing `README.txt` lives at `installer/windows-README.txt` and is automatically copied into the zip by the release workflow. (Unity wipes `Build/Windows/` on every rebuild, so the README is not stored there directly.)
 
 ## Controls
 
