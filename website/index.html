@@ -79,6 +79,19 @@
       background: #00ff33;
     }
 
+    .download-btn.secondary {
+      background: transparent;
+      color: #00cc2a;
+      border: 2px solid #00cc2a;
+      padding: 14px 38px; /* compensate for 2px border to keep height aligned */
+    }
+
+    .download-btn.secondary:hover {
+      background: rgba(0, 204, 42, 0.12);
+      color: #00ff33;
+      border-color: #00ff33;
+    }
+
     .download-row {
       display: flex;
       gap: 16px;
@@ -376,6 +389,21 @@
       var currentYear = new Date().getFullYear();
       if (yearEl) yearEl.textContent = currentYear > startYear ? startYear + '\u2013' + currentYear : startYear;
 
+      // Emphasize the download button matching the user's platform.
+      // navigator.userAgentData is the modern API; fall back to navigator.platform for older browsers.
+      var ua = navigator.userAgent || '';
+      var platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+      var p = platform.toUpperCase();
+      var isMac = p.indexOf('MAC') >= 0 || /Macintosh/i.test(ua);
+      var isWindows = p.indexOf('WIN') >= 0 || /Windows/i.test(ua);
+
+      if (!isMac && !isWindows) return; // Linux, mobile, etc. — leave both buttons equal.
+
+      var macButtons = document.querySelectorAll('a.download-btn[href$=".dmg"]');
+      var winButtons = document.querySelectorAll('a.download-btn[href$=".zip"]');
+
+      var demote = isMac ? winButtons : macButtons;
+      demote.forEach(function(btn) { btn.classList.add('secondary'); });
     })();
   </script>
 
