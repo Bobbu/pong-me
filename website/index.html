@@ -408,10 +408,14 @@
       var ua = navigator.userAgent || '';
       var platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
       var p = platform.toUpperCase();
-      var isMac = p.indexOf('MAC') >= 0 || /Macintosh/i.test(ua);
-      var isWindows = p.indexOf('WIN') >= 0 || /Windows/i.test(ua);
-      var isLinux = p.indexOf('LINUX') >= 0 || /Linux/i.test(ua);
-      var isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
+
+      // iPad in "Request Desktop Site" mode reports its userAgent as Macintosh,
+      // so we need maxTouchPoints to distinguish it from a real Mac (Macs have 0).
+      var hasTouch = navigator.maxTouchPoints > 1;
+      var isMobile = /Android|iPhone|iPad|iPod/i.test(ua) || (hasTouch && /Macintosh/i.test(ua));
+      var isWindows = (p.indexOf('WIN') >= 0 || /Windows/i.test(ua)) && !isMobile;
+      var isMac = (p.indexOf('MAC') >= 0 || /Macintosh/i.test(ua)) && !isMobile;
+      var isLinux = (p.indexOf('LINUX') >= 0 || /Linux/i.test(ua)) && !isMobile;
 
       var macButtons = document.querySelectorAll('a.download-btn[href$=".dmg"]');
       var winButtons = document.querySelectorAll('a.download-btn[href$=".zip"]');
@@ -421,20 +425,36 @@
         buttons.forEach(function(btn) { btn.classList.add('secondary'); });
       }
 
+      function disableButtons(buttons, replacementText) {
+        buttons.forEach(function(btn) {
+          btn.classList.add('disabled');
+          btn.removeAttribute('href');
+          btn.textContent = replacementText;
+        });
+      }
+
       if (isMac) {
         // Mac: emphasize the DMG, de-emphasize everything else
         demote(winButtons);
         demote(playButtons);
       } else if (isWindows) {
-        // Windows: emphasize the ZIP
+        // Windows: emphasize the ZIP, de-emphasize everything else
         demote(macButtons);
         demote(playButtons);
       } else if (isLinux) {
         // Linux: only the browser version is usable, emphasize it
         demote(macButtons);
         demote(winButtons);
+      } else if (isMobile) {
+        // Mobile: desktop downloads aren't runnable here. Disable them and
+        // funnel users to Play in Browser, which works on the phone.
+        disableButtons(macButtons, 'macOS only');
+        disableButtons(winButtons, 'Windows only');
+        document.querySelectorAll('.download-note').forEach(function(note) {
+          note.textContent = 'Tap Play in Browser to play right here on your phone.';
+        });
       }
-      // Mobile or unknown: leave all three buttons equal — user knows their context.
+      // Truly unknown desktop: leave all three buttons equal.
     })();
   </script>
 
