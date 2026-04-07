@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI rightScoreText;
     public TextMeshProUGUI winText;
     public GameObject winOverlay;
+    public GameObject startOverlay;
     public BallController ball;
     public int winningScore = 3;
 
@@ -16,6 +17,7 @@ public class GameManager : MonoBehaviour
     private int rightScore;
     private bool gameOver;
     private bool paused;
+    private bool gameStarted;
     private Vector2 savedBallVelocity;
 
     void Awake()
@@ -28,9 +30,24 @@ public class GameManager : MonoBehaviour
         UpdateScoreUI();
     }
 
+    /// <summary>
+    /// Called by the Start overlay's button (or Space/Enter) on first launch.
+    /// Hides the overlay, primes the audio system (critical for WebGL), and
+    /// kicks off the very first ball launch. Subsequent rounds re-launch
+    /// automatically via BallController.ResetBall().
+    /// </summary>
+    public void StartGame()
+    {
+        if (gameStarted) return;
+        gameStarted = true;
+        if (startOverlay != null) startOverlay.SetActive(false);
+        if (SoundManager.Instance != null) SoundManager.Instance.PrimeAudio();
+        if (ball != null) ball.LaunchBall();
+    }
+
     public void ScorePoint(bool leftSideGoal)
     {
-        if (gameOver || paused) return;
+        if (gameOver || paused || !gameStarted) return;
 
         if (leftSideGoal)
             rightScore++;
@@ -113,7 +130,7 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        // Cmd+Q / Ctrl+Q to quit (Mac/Windows)
+        // Cmd+Q / Ctrl+Q to quit (Mac/Windows) — always available
         if ((Input.GetKey(KeyCode.LeftCommand) || Input.GetKey(KeyCode.RightCommand) ||
              Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
             && Input.GetKeyDown(KeyCode.Q))
@@ -121,9 +138,24 @@ public class GameManager : MonoBehaviour
             Application.Quit();
         }
 
-        // Keyboard reset (still works on Mac)
-        if (Input.GetKeyDown(KeyCode.R))
-            ResetGame();
+        // While the Start overlay is up, Space / Enter / Return also begin the game.
+        // Speed and sound shortcuts (1/2/3, M) below remain available so users can
+        // tweak preferences before starting. Reset (R) is gated until after start.
+        if (!gameStarted)
+        {
+            if (Input.GetKeyDown(KeyCode.Space) ||
+                Input.GetKeyDown(KeyCode.Return) ||
+                Input.GetKeyDown(KeyCode.KeypadEnter))
+            {
+                StartGame();
+            }
+        }
+        else
+        {
+            // Keyboard reset (still works on Mac) — only after the game has started
+            if (Input.GetKeyDown(KeyCode.R))
+                ResetGame();
+        }
 
         // Keyboard speed shortcuts (also available via Settings panel)
         if (Input.GetKeyDown(KeyCode.Alpha1)) SetSpeed(5f, 0.3f, 12f);

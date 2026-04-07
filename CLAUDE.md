@@ -24,12 +24,20 @@ Unity 2D Pong game ("Pong Me" by Any Stupid Idea / CatalystApps) — a fully pro
 
 The game bootstraps entirely from `GameSetup.Awake()`, which instantiates all components:
 
-- **GameSetup** → Creates camera, ball, paddles, walls, border lines, goals, UI (canvas, scores, settings panel, help panel, win text), EventSystem, SoundManager, and GameManager
-- **GameManager** (singleton) → Score state, win detection (first to 3), speed control (applies immediately via `BallController.ApplySpeedChange`), sound toggle
-- **BallController** → Physics-based movement with Rigidbody2D, speed ramp on paddle hits, direction from hit position
+- **GameSetup** → Creates camera, ball, paddles, walls, border lines, goals, UI (canvas, scores, settings panel, help panel, win text, **start overlay**), EventSystem, SoundManager, and GameManager. The Start overlay is built last so it renders above all other UI.
+- **GameManager** (singleton) → Score state, win detection (first to 3), speed control (applies immediately via `BallController.ApplySpeedChange`), sound toggle, and the start gate. Tracks `gameStarted`; `StartGame()` is the only path that triggers the very first ball launch.
+- **BallController** → Physics-based movement with Rigidbody2D, speed ramp on paddle hits, direction from hit position. Does NOT auto-launch on `Start()` — waits for `GameManager.StartGame()` to call `LaunchBall()`. Subsequent rounds re-launch automatically via `ResetBall()`.
 - **PaddleController** → Dual-mode: keyboard input (W/S) for player, Y-tracking AI for opponent
-- **GoalZone** → Trigger colliders behind paddles that call `GameManager.ScorePoint()`
-- **SoundManager** (singleton) → Procedural audio generation (square/sine waves), mute support
+- **GoalZone** → Trigger colliders behind paddles that call `GameManager.ScorePoint()` (no-op until `gameStarted`)
+- **SoundManager** (singleton) → Procedural audio generation (square/sine waves), mute support. Exposes `PrimeAudio()` which `StartGame()` calls inside the user-gesture click handler — required for WebGL to unlock the AudioContext, harmless on other platforms.
+
+## Start Overlay
+
+On every platform, the game shows a full-screen "PRESS START" / "TAP TO START" overlay before the first ball launch. Tapping/clicking it (or pressing Space/Enter on desktop) calls `GameManager.StartGame()`, which hides the overlay, primes audio, and launches the ball. After "Play Again" the overlay does **not** re-show — the user has already proven they're here. The overlay's purposes:
+
+1. **WebGL audio gate** — browsers require audio to start from a user gesture
+2. **WebGL canvas focus** — clicking the canvas grabs keyboard focus so W/S work
+3. **First-time player onboarding** — the subtitle (`W / S TO MOVE • FIRST TO 3 WINS`) gives newcomers the controls and the win condition before action begins
 
 All sprites are generated from a 4x4 white texture at runtime. The gear icon is a procedurally drawn 64x64 texture. Audio clips are synthesized at 44100Hz.
 

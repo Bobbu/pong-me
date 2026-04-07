@@ -264,6 +264,72 @@ public class GameSetup : MonoBehaviour
 
         // Wire Play Again button to reset
         paBtn.onClick.AddListener(() => manager.ResetGame());
+
+        // --- Start Overlay (added LAST so it renders above scores, gear, and help icons) ---
+        // Full-screen click target. Required on WebGL to unlock the AudioContext via a
+        // user gesture, and a nice "ready when you are" gate on every other platform too.
+        GameObject startOverlay = new GameObject("StartOverlay");
+        startOverlay.transform.SetParent(safeArea.transform, false);
+        var startRt = startOverlay.AddComponent<RectTransform>();
+        startRt.anchorMin = Vector2.zero;
+        startRt.anchorMax = Vector2.one;
+        startRt.offsetMin = Vector2.zero;
+        startRt.offsetMax = Vector2.zero;
+        var startImg = startOverlay.AddComponent<Image>();
+        startImg.sprite = CreateOpaqueSprite();
+        startImg.color = new Color(0f, 0.04f, 0f, 0.78f); // dark green-tinted, mostly opaque
+        var startBtn = startOverlay.AddComponent<Button>();
+        var startColors = startBtn.colors;
+        startColors.normalColor = new Color(1f, 1f, 1f, 1f);
+        startColors.highlightedColor = new Color(1f, 1f, 1f, 1f);
+        startColors.pressedColor = new Color(0.85f, 1f, 0.85f, 1f);
+        startBtn.colors = startColors;
+
+        // "PRESS START" / "TAP TO START" headline
+        GameObject pressStartObj = new GameObject("PressStartText");
+        pressStartObj.transform.SetParent(startOverlay.transform, false);
+        var psRt = pressStartObj.AddComponent<RectTransform>();
+        psRt.anchorMin = new Vector2(0.5f, 0.5f);
+        psRt.anchorMax = new Vector2(0.5f, 0.5f);
+        psRt.pivot = new Vector2(0.5f, 0.5f);
+        psRt.anchoredPosition = new Vector2(0f, 30f);
+        psRt.sizeDelta = new Vector2(900f, 130f);
+        var psTmp = pressStartObj.AddComponent<TextMeshProUGUI>();
+#if UNITY_IOS
+        psTmp.text = "TAP TO START";
+#else
+        psTmp.text = "PRESS START";
+#endif
+        psTmp.fontSize = 90;
+        psTmp.color = new Color(0f, 1f, 0.2f);
+        psTmp.alignment = TextAlignmentOptions.Center;
+        psTmp.fontStyle = FontStyles.Bold;
+        psTmp.raycastTarget = false; // let clicks fall through to the overlay button
+
+        // Controls hint subtitle (helps first-time players)
+        GameObject hintObj = new GameObject("StartHint");
+        hintObj.transform.SetParent(startOverlay.transform, false);
+        var hRt = hintObj.AddComponent<RectTransform>();
+        hRt.anchorMin = new Vector2(0.5f, 0.5f);
+        hRt.anchorMax = new Vector2(0.5f, 0.5f);
+        hRt.pivot = new Vector2(0.5f, 0.5f);
+        hRt.anchoredPosition = new Vector2(0f, -55f);
+        hRt.sizeDelta = new Vector2(950f, 50f);
+        var hTmp = hintObj.AddComponent<TextMeshProUGUI>();
+#if UNITY_IOS
+        hTmp.text = "DRAG THE LEFT SIDE TO MOVE  •  FIRST TO 3 WINS";
+#else
+        hTmp.text = "W / S TO MOVE  •  FIRST TO 3 WINS";
+#endif
+        hTmp.fontSize = 28;
+        hTmp.color = new Color(0f, 0.75f, 0.16f);
+        hTmp.alignment = TextAlignmentOptions.Center;
+        hTmp.fontStyle = FontStyles.Normal;
+        hTmp.raycastTarget = false;
+
+        // Wire the overlay click to start the game
+        startBtn.onClick.AddListener(() => manager.StartGame());
+        manager.startOverlay = startOverlay;
     }
 
     // =============================================

@@ -41,6 +41,20 @@ public class SoundManager : MonoBehaviour
     public void PlayScore()       { if (!muted) audioSource.PlayOneShot(score, 0.8f); }
     public void PlayWin()         { if (!muted) audioSource.PlayOneShot(win, 1.0f); }
 
+    /// <summary>
+    /// Plays a brief click on game start. Doubles as the WebGL AudioContext
+    /// unlock — browsers require audio playback to originate from a user gesture
+    /// handler, and the START button click is exactly that. Harmless on other
+    /// platforms; provides nice arcade feedback that the game has begun.
+    /// Ignores the mute flag so the AudioContext gets primed even if the user
+    /// has toggled mute before starting.
+    /// </summary>
+    public void PrimeAudio()
+    {
+        if (paddleHit != null)
+            audioSource.PlayOneShot(paddleHit, muted ? 0f : 0.6f);
+    }
+
     // --- Procedural sound generation ---
 
     public static AudioClip GenerateWallBounce()

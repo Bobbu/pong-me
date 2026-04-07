@@ -12,7 +12,8 @@ public class BallController : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        LaunchBall();
+        // Ball stays motionless at center until GameManager.StartGame() launches it.
+        // The Start overlay (PRESS START) gates the first launch on every platform.
     }
 
     public void LaunchBall()
